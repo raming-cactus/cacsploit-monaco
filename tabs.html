@@ -1,0 +1,214 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow: hidden;
+      font-family: Segoe UI, Arial, sans-serif;
+      user-select: none;
+    }
+
+    .bar {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 8px;
+      background: transparent;
+    }
+
+    .tabs {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow: hidden;
+      flex: 1;
+    }
+
+    .tab {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      cursor: pointer;
+      min-width: 90px;
+      max-width: 220px;
+    }
+
+    .tab.active {
+      background: rgba(255,255,255,0.16);
+    }
+
+    .name {
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      font-size: 12.5px;
+      flex: 1;
+    }
+
+    .x {
+      width: 16px;
+      height: 16px;
+      border-radius: 6px;
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.8);
+      background: rgba(255,255,255,0.06);
+      font-size: 12px;
+      line-height: 12px;
+    }
+
+    .x:hover {
+      background: rgba(255,255,255,0.14);
+    }
+
+    .plus {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      background: rgba(255,255,255,0.08);
+      color: rgba(255,255,255,0.92);
+      cursor: pointer;
+      flex: 0 0 auto;
+      font-size: 18px;
+    }
+
+    .plus:hover {
+      background: rgba(255,255,255,0.14);
+    }
+
+    .renameBox {
+      position: absolute;
+      display: none;
+      z-index: 10;
+    }
+
+    .renameBox input {
+      width: 220px;
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.18);
+      outline: none;
+      background: rgba(20,20,20,0.88);
+      color: white;
+      font-size: 12.5px;
+    }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <div id="tabs" class="tabs"></div>
+    <div id="plus" class="plus">+</div>
+  </div>
+
+  <div id="renameBox" class="renameBox">
+    <input id="renameInput" />
+  </div>
+
+  <script>
+    const tabsEl = document.getElementById('tabs');
+    const plusEl = document.getElementById('plus');
+    const renameBox = document.getElementById('renameBox');
+    const renameInput = document.getElementById('renameInput');
+
+    let state = { tabs: [], activeId: null };
+    let renamingId = null;
+
+    function post(msg) {
+      if (window.chrome && window.chrome.webview) window.chrome.webview.postMessage(msg);
+    }
+
+    function render() {
+      tabsEl.innerHTML = '';
+
+      for (const t of state.tabs) {
+        const el = document.createElement('div');
+        el.className = 'tab' + (t.id === state.activeId ? ' active' : '');
+        el.dataset.id = t.id;
+
+        const name = document.createElement('div');
+        name.className = 'name';
+        name.textContent = t.name;
+
+        const x = document.createElement('div');
+        x.className = 'x';
+        x.textContent = '×';
+
+        x.addEventListener('click', (ev) => {
+          ev.stopPropagation();
+          post({ type: 'close', id: t.id });
+        });
+
+        el.addEventListener('click', () => {
+          post({ type: 'select', id: t.id });
+        });
+
+        el.addEventListener('dblclick', (ev) => {
+          ev.stopPropagation();
+          beginRename(t.id, t.name, el);
+        });
+
+        el.appendChild(name);
+        el.appendChild(x);
+        tabsEl.appendChild(el);
+      }
+    }
+
+    function beginRename(id, current, tabEl) {
+      renamingId = id;
+
+      const rect = tabEl.getBoundingClientRect();
+      renameBox.style.left = Math.max(8, rect.left) + 'px';
+      renameBox.style.top = (rect.top + rect.height + 6) + 'px';
+      renameBox.style.display = 'block';
+
+      renameInput.value = current || '';
+      renameInput.focus();
+      renameInput.select();
+    }
+
+    function endRename(commit) {
+      if (!renamingId) return;
+      const id = renamingId;
+      renamingId = null;
+
+      renameBox.style.display = 'none';
+
+      if (!commit) return;
+
+      const name = (renameInput.value || '').trim();
+      if (!name) return;
+
+      post({ type: 'rename', id, name });
+    }
+
+    renameInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') endRename(true);
+      if (e.key === 'Escape') endRename(false);
+    });
+
+    renameInput.addEventListener('blur', () => endRename(true));
+
+    plusEl.addEventListener('click', () => post({ type: 'new' }));
+
+    window.chrome.webview.addEventListener('message', (ev) => {
+      const msg = ev.data;
+      if (!msg || msg.type !== 'state') return;
+      state = msg.state || { tabs: [], activeId: null };
+      render();
+    });
+
+    post({ type: 'ready' });
+  </script>
+</body>
+</html>
