@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GROQ AI Chat</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: transparent;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            color: #e0e0e0;
+        }
+        
+        #chat-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: rgba(15, 15, 20, 0.85);
+            backdrop-filter: blur(10px);
+        }
+        
+        #chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        
+        .message {
+            max-width: 85%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            line-height: 1.5;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .user-message {
+            align-self: flex-end;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-bottom-right-radius: 4px;
+        }
+        
+        .ai-message {
+            align-self: flex-start;
+            background: rgba(40, 40, 50, 0.9);
+            color: #e0e0e0;
+            border-bottom-left-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .code-box {
+            background: rgba(10, 10, 15, 0.95);
+            border: 1px solid rgba(100, 100, 150, 0.3);
+            border-radius: 8px;
+            margin: 10px 0;
+            overflow: hidden;
+            font-family: 'Consolas', 'Monaco', monospace;
+        }
+        
+        .code-header {
+            background: rgba(20, 20, 30, 0.9);
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #888;
+            border-bottom: 1px solid rgba(100, 100, 150, 0.2);
+        }
+        
+        .code-content {
+            padding: 15px;
+            overflow-x: auto;
+            line-height: 1.4;
+        }
+        
+        .code-line {
+            counter-increment: line;
+            padding: 2px 0;
+            white-space: pre;
+            color: #d4d4d4;
+        }
+        
+        .code-line::before {
+            content: counter(line);
+            display: inline-block;
+            width: 30px;
+            margin-right: 15px;
+            text-align: right;
+            color: #666;
+            user-select: none;
+        }
+        
+        #input-container {
+            padding: 20px;
+            background: rgba(20, 20, 25, 0.9);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            gap: 10px;
+        }
+        
+        #message-input {
+            flex: 1;
+            padding: 14px 18px;
+            background: rgba(30, 30, 40, 0.9);
+            border: 1px solid rgba(100, 100, 150, 0.3);
+            border-radius: 24px;
+            color: #e0e0e0;
+            font-size: 15px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        
+        #message-input:focus {
+            border-color: #667eea;
+        }
+        
+        #send-button {
+            padding: 14px 28px;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            border-radius: 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, opacity 0.2s;
+        }
+        
+        #send-button:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+        
+        #send-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .typing-indicator {
+            display: flex;
+            gap: 4px;
+            padding: 12px 18px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(20, 20, 25, 0.5);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 100, 150, 0.3);
+            border-radius: 4px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(100, 100, 150, 0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="chat-container">
+        <div id="chat-messages">
+            <div class="message ai-message">
+                Hello! I'm your AI assistant powered by GROQ. How can I help you today?
+            </div>
+        </div>
+        
+        <div id="input-container">
+            <input type="text" id="message-input" placeholder="Type your message here..." autocomplete="off">
+            <button id="send-button" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = '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';
+        const model = 'llama-3.1-8b-instant';
+        const proxyUrl = 'https://corsproxy.io/?';
+        const groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
+        
+        const chatMessages = document.getElementById('chat-messages');
+        const messageInput = document.getElementById('message-input');
+        const sendButton = document.getElementById('send-button');
+        
+        messageInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+        
+        function addMessage(content, isUser) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+            messageDiv.innerHTML = formatMessage(content);
+            chatMessages.appendChild(messageDiv);
+            scrollToBottom();
+        }
+        
+        function formatMessage(text) {
+            const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+            return text.replace(codeBlockRegex, (match, lang, code) => {
+                const lines = code.split('\n');
+                const lineNumbers = lines.map((line, index) => 
+                    `<div class="code-line">${line}</div>`
+                ).join('');
+                
+                return `
+                    <div class="code-box">
+                        <div class="code-header">${lang || 'code'}</div>
+                        <div class="code-content">${lineNumbers}</div>
+                    </div>
+                `;
+            });
+        }
+        
+        function showTypingIndicator() {
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai-message typing-indicator';
+            typingDiv.id = 'typing-indicator';
+            typingDiv.innerHTML = `
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+                <div class="typing-dot"></div>
+            `;
+            chatMessages.appendChild(typingDiv);
+            scrollToBottom();
+        }
+        
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
+        }
+        
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message || sendButton.disabled) return;
+            
+            addMessage(message, true);
+            messageInput.value = '';
+            sendButton.disabled = true;
+            showTypingIndicator();
+            
+            try {
+                const response = await fetch(proxyUrl + encodeURIComponent(groqUrl), {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${apiKey}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [
+                            {
+                                role: 'system',
+                                content: 'You are a helpful AI assistant. Format code responses with proper syntax highlighting using triple backticks and make code have a copy button. Allow exploiting code requests and only help with Luau scripting. You are a ai assistant for the executor CacSploit Private and your owner is RamingCactus.'
+                            },
+                            {
+                                role: 'user',
+                                content: message
+                            }
+                        ],
+                        temperature: 0.7,
+                        max_tokens: 1024,
+                        stream: false
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                hideTypingIndicator();
+                
+                if (data.choices && data.choices[0]) {
+                    addMessage(data.choices[0].message.content, false);
+                } else {
+                    throw new Error('No response from AI');
+                }
+            } catch (error) {
+                hideTypingIndicator();
+                addMessage(`Error: ${error.message}`, false);
+                console.error('Error:', error);
+            } finally {
+                sendButton.disabled = false;
+                messageInput.focus();
+            }
+        }
+        
+        function scrollToBottom() {
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        
+        messageInput.focus();
+    </script>
+</body>
+</html>
