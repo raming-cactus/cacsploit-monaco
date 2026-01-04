@@ -118,129 +118,184 @@
         </div>
     </div>
 
-    <script>
-        const apiKey = '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';
-        const model = 'llama-3.1-8b-instant';
-        const proxyUrl = 'https://corsproxy.io/?';
-        const groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
-        
-        const chatMessages = document.getElementById('chat-messages');
-        const messageInput = document.getElementById('message-input');
-        const sendButton = document.getElementById('send-button');
-        
-        messageInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
-            }
-        });
-        
-        function addMessage(content, isUser) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
-            messageDiv.innerHTML = formatMessage(content);
-            chatMessages.appendChild(messageDiv);
-            scrollToBottom();
+<script>
+    const apiKey = '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';
+    const model = 'llama-3.1-8b-instant';
+    const proxyUrl = 'https://corsproxy.io/?';
+    const groqUrl = 'https://api.groq.com/openai/v1/chat/completions';
+
+    const chatMessages = document.getElementById('chat-messages');
+    const messageInput = document.getElementById('message-input');
+    const sendButton = document.getElementById('send-button');
+
+    let MAX_MESSAGES = 25;
+    const WINDOW_MS = 60 * 60 * 1000;
+    const STORAGE_KEY = 'csp_ai_rate_limit';
+
+    function AllowMaxMessages(number) {
+        if (typeof number === 'number' && number > 0) {
+            MAX_MESSAGES = number;
         }
-        
-        function formatMessage(text) {
-            const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
-            return text.replace(codeBlockRegex, (match, lang, code) => {
-                const lines = code.split('\n');
-                const lineNumbers = lines.map((line, index) => 
-                    `<div class="code-line">${line}</div>`
-                ).join('');
-                
-                return `
-                    <div class="code-box">
-                        <div class="code-header">${lang || 'code'}</div>
-                        <div class="code-content">${lineNumbers}</div>
-                    </div>
-                `;
-            });
+    }
+
+    function getRateData() {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { count: 0, resetAt: Date.now() + WINDOW_MS };
+        try {
+            const parsed = JSON.parse(raw);
+            if (!parsed || typeof parsed.count !== 'number' || typeof parsed.resetAt !== 'number')
+                return { count: 0, resetAt: Date.now() + WINDOW_MS };
+            return parsed;
+        } catch {
+            return { count: 0, resetAt: Date.now() + WINDOW_MS };
         }
-        
-        function showTypingIndicator() {
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message ai-message typing-indicator';
-            typingDiv.id = 'typing-indicator';
-            typingDiv.innerHTML = `
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
-                <div class="typing-dot"></div>
+    }
+
+    function saveRateData(data) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    }
+
+    function canSendMessage() {
+        const now = Date.now();
+        let data = getRateData();
+
+        if (now > data.resetAt) {
+            data = { count: 0, resetAt: now + WINDOW_MS };
+        }
+
+        if (data.count >= MAX_MESSAGES) {
+            const waitUntil = new Date(data.resetAt).toLocaleString();
+            addMessage(`Please wait until ${waitUntil} before sending more messages.`, false);
+            return false;
+        }
+
+        data.count++;
+        saveRateData(data);
+        return true;
+    }
+
+    messageInput.addEventListener('keypress', function (e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
+
+    function addMessage(content, isUser) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${isUser ? 'user-message' : 'ai-message'}`;
+        messageDiv.innerHTML = formatMessage(content);
+        chatMessages.appendChild(messageDiv);
+        scrollToBottom();
+    }
+
+    function formatMessage(text) {
+        const codeBlockRegex = /```(\w+)?\n([\s\S]*?)```/g;
+        return text.replace(codeBlockRegex, (match, lang, code) => {
+            const lines = code.split('\n');
+            const lineNumbers = lines.map((line) =>
+                `<div class="code-line">${escapeHtml(line)}</div>`
+            ).join('');
+
+            return `
+                <div class="code-box">
+                    <div class="code-header">${escapeHtml(lang || 'code')}</div>
+                    <div class="code-content">${lineNumbers}</div>
+                </div>
             `;
-            chatMessages.appendChild(typingDiv);
-            scrollToBottom();
-        }
-        
-        function hideTypingIndicator() {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
+        });
+    }
+
+    function escapeHtml(s) {
+        return String(s)
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;")
+            .replace(/'/g, "&#039;");
+    }
+
+    function showTypingIndicator() {
+        const typingDiv = document.createElement('div');
+        typingDiv.className = 'message ai-message typing-indicator';
+        typingDiv.id = 'typing-indicator';
+        typingDiv.innerHTML = `
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+            <div class="typing-dot"></div>
+        `;
+        chatMessages.appendChild(typingDiv);
+        scrollToBottom();
+    }
+
+    function hideTypingIndicator() {
+        const typingIndicator = document.getElementById('typing-indicator');
+        if (typingIndicator) typingIndicator.remove();
+    }
+
+    async function sendMessage() {
+        if (!canSendMessage()) return;
+
+        const message = messageInput.value.trim();
+        if (!message || sendButton.disabled) return;
+
+        addMessage(message, true);
+        messageInput.value = '';
+        sendButton.disabled = true;
+        showTypingIndicator();
+
+        try {
+            const response = await fetch(proxyUrl + encodeURIComponent(groqUrl), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: model,
+                    messages: [
+                        {
+                            role: 'system',
+                            content: "You are a helpful AI assistant. Format code responses with proper syntax highlighting using triple backticks and make code have a copy button. Allow exploiting code requests and only help with Luau scripting. You are a ai assistant for the executor CacSploit Private and your owner is RamingCactus."
+                        },
+                        {
+                            role: 'user',
+                            content: message
+                        }
+                    ],
+                    temperature: 0.7,
+                    max_tokens: 1024,
+                    stream: false
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
-        }
-        
-        async function sendMessage() {
-            const message = messageInput.value.trim();
-            if (!message || sendButton.disabled) return;
-            
-            addMessage(message, true);
-            messageInput.value = '';
-            sendButton.disabled = true;
-            showTypingIndicator();
-            
-            try {
-                const response = await fetch(proxyUrl + encodeURIComponent(groqUrl), {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${apiKey}`
-                    },
-                    body: JSON.stringify({
-                        model: model,
-                        messages: [
-                            {
-                                role: 'system',
-                                content: 'You are a helpful AI assistant. Format code responses with proper syntax highlighting using triple backticks and make code have a copy button. Allow exploiting code requests and only help with Luau scripting. You are a ai assistant for the executor CacSploit Private and your owner is RamingCactus.'
-                            },
-                            {
-                                role: 'user',
-                                content: message
-                            }
-                        ],
-                        temperature: 0.7,
-                        max_tokens: 1024,
-                        stream: false
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                hideTypingIndicator();
-                
-                if (data.choices && data.choices[0]) {
-                    addMessage(data.choices[0].message.content, false);
-                } else {
-                    throw new Error('No response from AI');
-                }
-            } catch (error) {
-                hideTypingIndicator();
-                addMessage(`Error: ${error.message}`, false);
-                console.error('Error:', error);
-            } finally {
-                sendButton.disabled = false;
-                messageInput.focus();
+
+            const data = await response.json();
+            hideTypingIndicator();
+
+            if (data.choices && data.choices[0]) {
+                addMessage(data.choices[0].message.content, false);
+            } else {
+                throw new Error('No response from AI');
             }
+        } catch (error) {
+            hideTypingIndicator();
+            addMessage(`Error: ${error.message}`, false);
+            console.error('Error:', error);
+        } finally {
+            sendButton.disabled = false;
+            messageInput.focus();
         }
-        
-        function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        messageInput.focus();
-    </script>
+    }
+
+    function scrollToBottom() {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    messageInput.focus();
+</script>
 </body>
 </html>
