@@ -23,8 +23,7 @@
             display: flex;
             flex-direction: column;
             height: 100vh;
-            background: rgba(15, 15, 20, 0.85);
-            backdrop-filter: blur(10px);
+            background: transparent;
         }
         
         #chat-messages {
@@ -46,17 +45,18 @@
         
         .user-message {
             align-self: flex-end;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: rgba(30, 30, 40, 0.6);
             color: white;
+            border: 1px solid white;
             border-bottom-right-radius: 4px;
         }
         
         .ai-message {
             align-self: flex-start;
-            background: rgba(40, 40, 50, 0.9);
+            background: rgba(30, 30, 40, 0.6);
             color: #e0e0e0;
+            border: 1px solid white;
             border-bottom-left-radius: 4px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
         .code-box {
@@ -101,8 +101,8 @@
         
         #input-container {
             padding: 20px;
-            background: rgba(20, 20, 25, 0.9);
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            background: transparent;
+            border-top: 1px solid rgba(255, 255, 255, 0.3);
             display: flex;
             gap: 10px;
         }
@@ -110,8 +110,8 @@
         #message-input {
             flex: 1;
             padding: 14px 18px;
-            background: rgba(30, 30, 40, 0.9);
-            border: 1px solid rgba(100, 100, 150, 0.3);
+            background: transparent;
+            border: 1px solid white;
             border-radius: 24px;
             color: #e0e0e0;
             font-size: 15px;
@@ -120,12 +120,12 @@
         }
         
         #message-input:focus {
-            border-color: #667eea;
+            border-color: #4a9eff;
         }
         
         #send-button {
             padding: 14px 28px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #4a9eff;
             color: white;
             border: none;
             border-radius: 24px;
@@ -155,7 +155,7 @@
         .typing-dot {
             width: 8px;
             height: 8px;
-            background: #667eea;
+            background: #4a9eff;
             border-radius: 50%;
             animation: typing 1.4s infinite;
         }
