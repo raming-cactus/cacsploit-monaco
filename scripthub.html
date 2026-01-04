@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bgcolor: rgb(20, 15, 25);
+            --primary: rgb(147, 51, 234);
+            --primary-light: rgba(147, 51, 234, 0.5);
+            --primary-dark: rgb(126, 34, 206);
+            --searbarbgcolor: rgba(30, 25, 35, 0.9);
+            --searchbarbordercolor: rgba(255, 255, 255, 0.1);
+            --sarchbarbordercolorfocused: rgba(147, 51, 234, 0.8);
+            --scriptcardbgcolor: rgba(25, 20, 30, 0.8);
+            --scriptcardbordercolor: rgba(147, 51, 234, 0.3);
+            --scriptcardbordercoloronhover: rgba(147, 51, 234, 0.6);
+            --scriptcardglow: rgba(147, 51, 234, 0.3);
+            --Scripttitlecolor: rgb(216, 180, 254);
+            --Scriptgametitlecolor: #ffffff;
+            --clickcolor: #c084fc;
+            --buttonbgcolor: rgba(25, 20, 30, 0.8);
+            --buttonbordercolor: rgb(216, 180, 254);
+            --buttontextcolor: rgb(216, 180, 254);
+            --buttonbgcolorclick: rgba(147, 51, 234, 0.3);
+            --buttonbgcolorhover: rgba(147, 51, 234, 0.2);
+        }
+
+        body {
+            background-color: var(--bgcolor);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: white;
+            min-height: 100vh;
+        }
+
+        .searchbar {
+            background-color: var(--searbarbgcolor);
+            border: 1px solid var(--searchbarbordercolor);
+            border-radius: 9999px;
+            text-align: left;
+            position: fixed;
+            z-index: 50;
+            backdrop-filter: blur(10px);
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            padding: 14px 24px;
+            color: #f0f0f0;
+            outline: none;
+            width: 500px;
+            max-width: 90%;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            font-size: 0.95rem;
+            padding-left: 50px;
+        }
+
+        .searchbar:focus {
+            border-color: var(--sarchbarbordercolorfocused);
+            box-shadow: 0 0 0 2px var(--sarchbarbordercolorfocused);
+            background-color: rgba(35, 30, 40, 0.95);
+        }
+
+        .searchbar::placeholder {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 24px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, 0.6);
+            z-index: 60;
+            pointer-events: none;
+        }
+
+        .script {
+            background-color: var(--scriptcardbgcolor);
+            border-radius: 14px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            border: 1px solid var(--scriptcardbordercolor);
+            position: relative;
+            height: 100%;
+        }
+
+        .script::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 14px;
+            padding: 1px;
+            background: linear-gradient(135deg, var(--primary-light), rgba(147, 51, 234, 0.1));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .script:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(147, 51, 234, 0.3);
+            border-color: var(--scriptcardbordercoloronhover);
+        }
+
+        .script img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .script-content {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            flex-grow: 1;
+        }
+
+        .script h3 {
+            margin: 0;
+            font-size: 1.1rem;
+            color: var(--Scripttitlecolor);
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .game-name {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .views {
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.6);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .script-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px 12px;
+            background-color: transparent;
+            border: 1px solid var(--buttonbordercolor);
+            color: var(--buttontextcolor);
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .action-btn:hover {
+            background-color: var(--buttonbgcolorhover);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(147, 51, 234, 0.2);
+        }
+
+        .action-btn:active {
+            background-color: var(--buttonbgcolorclick);
+            transform: translateY(0);
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+            margin: 60px auto;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            background-color: rgba(147, 51, 234, 0.3);
+            border-radius: 20px;
+            font-size: 0.75rem;
+            color: rgb(216, 180, 254);
+            margin-right: 6px;
+            margin-bottom: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .tag:hover {
+            background-color: rgba(147, 51, 234, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            padding: 100px 0 60px;
+            margin-bottom: 60px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            clip-path: polygon(0 0, 100% 0, 100% 90%, 0 100%);
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(216, 180, 254, 0.1), transparent 70%);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+            background: linear-gradient(to right, #fff, var(--Scripttitlecolor));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .floating-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 5px 20px rgba(147, 51, 234, 0.5);
+            cursor: pointer;
+            z-index: 40;
+            transition: all 0.3s ease;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px);
+        }
+
+        .floating-btn.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .floating-btn:hover {
+            transform: translateY(-5px) scale(1.1);
+            box-shadow: 0 8px 25px rgba(147, 51, 234, 0.6);
+        }
+
+        .floating-btn:active {
+            transform: translateY(0) scale(0.95);
+        }
+
+        .script-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 8px;
+        }
+
+        .script-date {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: var(--Scripttitlecolor);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            z-index: 2;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            gap: 10px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background-color: var(--scriptcardbgcolor);
+            border: 1px solid var(--scriptcardbordercolor);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .tab.active {
+            background-color: var(--primary);
+            border-color: var(--primary);
+        }
+
+        .tab:hover:not(.active) {
+            background-color: var(--buttonbgcolorhover);
+        }
+
+        .saved-scripts-container {
+            display: none;
+        }
+    </style>
+</head>
+<body class="antialiased">
+    <div class="header">
+        <h1>Vant Script Hub</h1>
+        <p>Discover powerful scripts for your favorite games</p>
+    </div>
+    
+    <div class="tabs">
+        <div class="tab active" data-tab="script-hub">Script Hub</div>
+        <div class="tab" data-tab="saved-scripts">Saved Scripts</div>
+    </div>
+    
+    <div class="relative">
+        <div class="search-icon">
+            <i class="fas fa-search"></i>
+        </div>
+        <input class="searchbar" placeholder="Search scripts by game, feature, or creator...">
+    </div>
+    
+    <div class="container px-4 pb-20">
+        <div class="scriptscontainer grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        </div>
+        
+        <div class="saved-scripts-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        </div>
+    </div>
+
+    <div class="floating-btn" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+        <i class="fas fa-arrow-up"></i>
+    </div>
+
+    <script>
+        const proxies = [
+            'https://cors-anywhere.herokuapp.com/',
+            'https://api.codetabs.com/v1/proxy/?quest=',
+            'https://thingproxy.freeboard.io/fetch/'
+        ];
+        
+        let page = 1;
+        let loading = false;
+        let proxy = 0;
+        let savedScripts = JSON.parse(localStorage.getItem('savedScripts')) || [];
+
+        async function load(scripts) {
+            const container = document.querySelector('.scriptscontainer');
+            container.innerHTML = '<div class="col-span-full"><div class="loading-spinner"></div></div>';
+            
+            try {
+                const url = 'https://scriptblox.com/api/script/fetch';
+                const response = await fetch(proxies[proxy] + url);
+                const jsdata = await response.json();
+                
+                if (jsdata?.result?.scripts) {
+                    addscript(jsdata.result.scripts);
+                }
+            } catch (error) {
+                proxy = (proxy + 1) % proxies.length;
+                await load();
+            }
+        }
+
+        async function loadpage(page = 2) {
+            const container = document.querySelector('.scriptscontainer');
+            loading = true;
+            
+            const loadingIndicator = document.createElement('div');
+            loadingIndicator.className = 'col-span-full';
+            loadingIndicator.innerHTML = '<div class="loading-spinner"></div>';
+            container.appendChild(loadingIndicator);
+            
+            try {
+                const url = `https://scriptblox.com/api/script/fetch?page=${page}`;
+                const response = await fetch(proxies[proxy] + url);
+                const jsdata = await response.json();
+                
+                container.removeChild(loadingIndicator);
+                
+                if (jsdata?.result?.scripts?.length > 0) {
+                    addscript(jsdata.result.scripts, true);
+                } else {
+                    const endMessage = document.createElement('div');
+                    endMessage.className = 'col-span-full py-8 text-center text-gray-400';
+                    endMessage.textContent = "You've reached the end 🚀";
+                    container.appendChild(endMessage);
+                }
+            } catch (error) {
+                proxy = (proxy + 1) % proxies.length;
+                await loadpage(page);
+            } finally {
+                loading = false;
+            }
+        }
+
+        function formatDate(dateString) {
+            if (!dateString) return 'Unknown date';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+        }
+
+        function addscript(scripts, append = false) {
+            const container = document.querySelector('.scriptscontainer');
+            
+            if (!append) {
+                container.innerHTML = '';
+            }
+            
+            scripts.forEach(script => {
+                const raw = script.image;
+                const imageUrl = raw 
+                    ? (raw.startsWith('http') ? raw : `https://scriptblox.com${raw}`)
+                    : 'https://placehold.co/600x400/1a1a2a/c084fc?text=No+Image';
+                
+                const isSaved = savedScripts.some(s => s._id === script._id);
+                
+                const card = document.createElement('div');
+                card.className = 'script fade-in';
+                card.innerHTML = `
+                    <div class="relative">
+                        <img src="${imageUrl}" alt="${script.title || 'Script'}">
+                        ${script.isPaid ? '<div class="badge"><i class="fas fa-crown mr-1"></i> Premium</div>' : ''}
+                    </div>
+                    <div class="script-content">
+                        <h3>${script.title || 'Unknown Script'}</h3>
+                        <div class="game-name">
+                            <i class="fas fa-gamepad text-xs opacity-60"></i>
+                            ${script.game?.name || 'Unknown Game'}
+                        </div>
+                        <div class="views">
+                            <i class="fas fa-eye text-xs opacity-60"></i>
+                            ${script.views ? script.views.toLocaleString() + ' views' : 'Unknown views'}
+                        </div>
+                        ${script.tags?.length ? `<div class="mt-2">${script.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
+                        <div class="script-meta">
+                            <div class="script-date">
+                                <i class="far fa-calendar-alt mr-1"></i> ${formatDate(script.createdAt)}
+                            </div>
+                        </div>
+                        <div class="script-actions">
+                            <button class="action-btn execute-btn" data-script="${encodeURIComponent(script.script)}">
+                                <i class="fas fa-play"></i> Execute
+                            </button>
+                            <button class="action-btn copy-btn" data-script="${encodeURIComponent(script.script)}">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
+                            <button class="action-btn save-btn" data-script='${JSON.stringify(script)}'>
+                                <i class="${isSaved ? 'fas' : 'far'} fa-bookmark"></i> ${isSaved ? 'Saved' : 'Save'}
+                            </button>
+                        </div>
+                    </div>`;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function loadSavedScripts() {
+            const container = document.querySelector('.saved-scripts-container');
+            container.innerHTML = '';
+            
+            if (savedScripts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state col-span-full">
+                        <i class="far fa-bookmark mb-4 text-4xl opacity-30"></i>
+                        <p>No saved scripts yet</p>
+                        <p class="text-sm mt-2 opacity-50">Save scripts from the Script Hub to see them here</p>
+                    </div>`;
+                return;
+            }
+            
+            savedScripts.forEach(script => {
+                const raw = script.image;
+                const imageUrl = raw 
+                    ? (raw.startsWith('http') ? raw : `https://scriptblox.com${raw}`)
+                    : 'https://placehold.co/600x400/1a1a2a/c084fc?text=No+Image';
+                
+                const card = document.createElement('div');
+                card.className = 'script fade-in';
+                card.innerHTML = `
+                    <div class="relative">
+                        <img src="${imageUrl}" alt="${script.title || 'Script'}">
+                        ${script.isPaid ? '<div class="badge"><i class="fas fa-crown mr-1"></i> Premium</div>' : ''}
+                    </div>
+                    <div class="script-content">
+                        <h3>${script.title || 'Unknown Script'}</h3>
+                        <div class="game-name">
+                            <i class="fas fa-gamepad text-xs opacity-60"></i>
+                            ${script.game?.name || 'Unknown Game'}
+                        </div>
+                        <div class="views">
+                            <i class="fas fa-eye text-xs opacity-60"></i>
+                            ${script.views ? script.views.toLocaleString() + ' views' : 'Unknown views'}
+                        </div>
+                        ${script.tags?.length ? `<div class="mt-2">${script.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}</div>` : ''}
+                        <div class="script-meta">
+                            <div class="script-date">
+                                <i class="far fa-calendar-alt mr-1"></i> ${formatDate(script.createdAt)}
+                            </div>
+                        </div>
+                        <div class="script-actions">
+                            <button class="action-btn execute-btn" data-script="${encodeURIComponent(script.script)}">
+                                <i class="fas fa-play"></i> Execute
+                            </button>
+                            <button class="action-btn copy-btn" data-script="${encodeURIComponent(script.script)}">
+                                <i class="far fa-copy"></i> Copy
+                            </button>
+                            <button class="action-btn remove-save-btn" data-script='${JSON.stringify(script)}'>
+                                <i class="fas fa-trash"></i> Remove
+                            </button>
+                        </div>
+                    </div>`;
+                
+                container.appendChild(card);
+            });
+        }
+
+        function saveScript(script) {
+            if (!savedScripts.some(s => s._id === script._id)) {
+                savedScripts.push(script);
+                localStorage.setItem('savedScripts', JSON.stringify(savedScripts));
+                return true;
+            }
+            return false;
+        }
+
+        function removeSavedScript(script) {
+            savedScripts = savedScripts.filter(s => s._id !== script._id);
+            localStorage.setItem('savedScripts', JSON.stringify(savedScripts));
+        }
+
+        async function executeScript(scriptContent) {
+            try {
+                const response = await fetch('http://127.0.0.1:8080/handlescripthub', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ script: scriptContent })
+                });
+                
+                if (response.ok) {
+                } else {
+                }
+            } catch (error) {
+                alert('Please ensure you are using the script-hub while using Vant!');
+            }
+        }
+
+        document.addEventListener('click', async (e) => {
+            if (e.target.closest('.copy-btn')) {
+                const button = e.target.closest('.copy-btn');
+                const encodedScript = button.getAttribute('data-script');
+                const fullScript = decodeURIComponent(encodedScript);
+                const originalContent = button.innerHTML;
+                
+                try {
+                    await navigator.clipboard.writeText(fullScript);
+                    
+                    button.innerHTML = '<i class="fas fa-check"></i> Copied!';
+                    button.style.borderColor = '#4ade80';
+                    button.style.color = '#4ade80';
+                    button.style.boxShadow = '0 4px 15px rgba(74, 222, 128, 0.3)';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalContent;
+                        button.style.borderColor = '';
+                        button.style.color = '';
+                        button.style.boxShadow = '';
+                    }, 2000);
+                } catch (error) {
+                    button.innerHTML = '<i class="fas fa-times"></i> Failed';
+                    button.style.borderColor = '#f87171';
+                    button.style.color = '#f87171';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = originalContent;
+                        button.style.borderColor = '';
+                        button.style.color = '';
+                    }, 2000);
+                }
+            }
+            
+            if (e.target.closest('.execute-btn')) {
+                const button = e.target.closest('.execute-btn');
+                const encodedScript = button.getAttribute('data-script');
+                const fullScript = decodeURIComponent(encodedScript);
+                const originalContent = button.innerHTML;
+                
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Executing...';
+                
+                await executeScript(fullScript);
+                
+                button.innerHTML = originalContent;
+            }
+            
+            if (e.target.closest('.save-btn')) {
+                const button = e.target.closest('.save-btn');
+                const scriptData = JSON.parse(button.getAttribute('data-script'));
+                
+                if (saveScript(scriptData)) {
+                    button.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+                    button.style.borderColor = '#4ade80';
+                    button.style.color = '#4ade80';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+                        button.style.borderColor = '';
+                        button.style.color = '';
+                    }, 2000);
+                } else {
+                    button.innerHTML = '<i class="fas fa-bookmark"></i> Already Saved';
+                    
+                    setTimeout(() => {
+                        button.innerHTML = '<i class="fas fa-bookmark"></i> Saved';
+                    }, 2000);
+                }
+            }
+            
+            if (e.target.closest('.remove-save-btn')) {
+                const button = e.target.closest('.remove-save-btn');
+                const scriptData = JSON.parse(button.getAttribute('data-script'));
+                
+                removeSavedScript(scriptData);
+                loadSavedScripts();
+            }
+            
+            if (e.target.closest('.tab')) {
+                const tab = e.target.closest('.tab');
+                const tabName = tab.getAttribute('data-tab');
+                
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                if (tabName === 'script-hub') {
+                    document.querySelector('.scriptscontainer').style.display = 'grid';
+                    document.querySelector('.saved-scripts-container').style.display = 'none';
+                } else if (tabName === 'saved-scripts') {
+                    document.querySelector('.scriptscontainer').style.display = 'none';
+                    document.querySelector('.saved-scripts-container').style.display = 'grid';
+                    loadSavedScripts();
+                }
+            }
+        });
+
+        const searchbar = document.querySelector('.searchbar');
+        let searchTimeout;
+        
+        searchbar.addEventListener('input', async (e) => {
+            clearTimeout(searchTimeout);
+            const content = e.target.value.trim();
+            const container = document.querySelector('.scriptscontainer');
+            
+            if (!content) {
+                await load();
+                return;
+            }
+            
+            container.innerHTML = '<div class="col-span-full"><div class="loading-spinner"></div></div>';
+            
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const searchUrl = `https://scriptblox.com/api/script/search?q=${encodeURIComponent(content)}`;
+                    const answer = await fetch(proxies[proxy] + searchUrl);
+                    
+                    if (!answer.ok) {
+                        throw new Error('Search fetch error');
+                    }
+                    
+                    const data = await answer.json();
+                    
+                    if (data?.result?.scripts?.length > 0) {
+                        addscript(data.result.scripts);
+                    } else {
+                        container.innerHTML = `
+                            <div class="empty-state col-span-full">
+                                <i class="fas fa-search mb-4 text-4xl opacity-30"></i>
+                                <p>No scripts found for "${content}"</p>
+                                <p class="text-sm mt-2 opacity-50">Try different keywords or check spelling</p>
+                            </div>`;
+                    }
+                } catch (error) {
+                    proxy = (proxy + 1) % proxies.length;
+                    
+                    setTimeout(() => {
+                        searchbar.dispatchEvent(new Event('input'));
+                    }, 500);
+                }
+            }, 500);
+        });
+
+        window.addEventListener('scroll', function() {
+            const floatingBtn = document.querySelector('.floating-btn');
+            if (window.scrollY > 300) {
+                floatingBtn.classList.add('visible');
+            } else {
+                floatingBtn.classList.remove('visible');
+            }
+        });
+
+        load();
+        
+        window.addEventListener('scroll', async () => {
+            const scrollPosition = window.innerHeight + window.scrollY;
+            const documentHeight = document.body.offsetHeight;
+            const threshold = 200;
+            
+            if (scrollPosition >= documentHeight - threshold && !loading) {
+                page += 1;
+                await loadpage(page);
+            }
+        });
+    </script>
+</body>
+</html>
